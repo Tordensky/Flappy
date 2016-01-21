@@ -34,7 +34,7 @@ var mainstate = {
 
         // Add gravity to the bird
         game.physics.arcade.enable(this.bird);
-        this.bird.body.gravity.y = 1000 ;
+        this.bird.body.gravity.y = 1000;
         this.bird.anchor.setTo(-0.2, 0.5);
 
         // call the 'jump' function on key press
