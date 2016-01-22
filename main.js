@@ -1,23 +1,28 @@
 
+const MAX_SPEED = 350;
+const FALLING_SPEED = -400;
+const TURN_SPEED = 25;
+const TURN_UPDATE_INTERVA_MS = 10;
+const MAX_ANGLE = 30;
 
 // init phaser
-var game = new Phaser.Game(400, 490, Phaser.AUTO, 'gameDiv');
+var game = new Phaser.Game(490, 650, Phaser.AUTO, 'gameDiv');
 
 // create our main state taht will contain the game
 var mainstate = {
-    preload: function () {
+    preload() {
         // This function will be executed at the beginning
         // that's where we load the game's assets
 
         game.stage.backgroundColor = '#71c5cf';
 
-        game.load.image('bird', 'assets/bird.png');
-        game.load.image('pipe', 'assets/pipe.png');
+        game.load.image('bird', 'assets/skydiverSmall.png');
+        game.load.image('pipe', 'assets/cloudSmall.png');
 
         game.load.audio('jump', 'assets/jump.wav');
     },
 
-    create: function () {
+    create() {
         // This function is called after the preload function
         // Here we set up the game, display sprites, etc.
 
@@ -26,25 +31,65 @@ var mainstate = {
 
         this.jumpSound = game.add.audio('jump');
 
-        this.bird = this.game.add.sprite(100, 245, 'bird');
+        this.bird = this.game.add.sprite(200, 200, 'bird');
 
         this.pipes = game.add.group();
         this.pipes.enableBody = true; // add physics to the group
-        this.pipes.createMultiple(20, 'pipe'); // create X pipes
+        this.pipes.createMultiple(50, 'pipe'); // create X pipes
 
         // Add gravity to the bird
         game.physics.arcade.enable(this.bird);
-        this.bird.body.gravity.y = 1000;
-        this.bird.anchor.setTo(-0.2, 0.5);
+        this.bird.body.velocity.x = 0;
+        this.bird.anchor.setTo(0.5, 0.0);
 
-        // call the 'jump' function on key press
-        var spacekey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        spacekey.onDown.add(this.jump, this);
+        // Setup controls
+        // const spacekey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+        // spacekey.onDown.add(this.jump, this);
+
+        //const upArrow = this.game.input.keyboard.addKey(Phaser.Keyboard.UP);
+        //upArrow.onDown.add(this.jump, this);
+
+        const leftArrow = this.game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+        leftArrow.onDown.add(this.moveLeftDown, this);
+        leftArrow.onUp.add(this.moveLeftUp, this);
+
+        const rightArrow = this.game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+        rightArrow.onDown.add(this.moveRightDown, this);
+        rightArrow.onUp.add(this.moveRightUp, this);
 
         this.timer = game.time.events.loop(1500, this.addRowOfPipes, this);
 
         this.score = 0;
         this.labelScore = game.add.text(20, 20, '0', {font: '30px Arial', fill: "#ffffff"});
+    },
+
+    moveLeftDown() {
+        this.leftInterval = setInterval(() => {
+
+            if (this.bird && this.bird.body.velocity.x > -MAX_SPEED) {
+                this.bird.body.velocity.x -= TURN_SPEED;
+                this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
+
+            }
+        }, TURN_UPDATE_INTERVA_MS);
+    },
+
+    moveLeftUp() {
+        clearInterval(this.leftInterval);
+    },
+
+    moveRightDown() {
+        this.rightInterval = setInterval(() => {
+
+            if (this.bird && this.bird.body.velocity.x < MAX_SPEED) {
+                this.bird.body.velocity.x += TURN_SPEED;
+                this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
+            }
+        }, TURN_UPDATE_INTERVA_MS);
+    },
+
+    moveRightUp() {
+        clearInterval(this.rightInterval);
     },
 
     update: function () {
@@ -55,30 +100,30 @@ var mainstate = {
             this.restartGame();
         }
 
-        if (this.bird.angle < 20) {
-            this.bird.angle += 1;
-        }
+        //if (this.bird.angle < 20) {
+        //    this.bird.angle += 1;
+        //}
 
         game.physics.arcade
             .overlap(this.bird, this.pipes, this.hitPipe, null, this);
     },
 
-    addOnePipe: function (x, y) {
+    addOnePipe(x, y) {
         var pipe = this.pipes.getFirstDead();
 
         pipe.reset(x, y);
 
-        pipe.body.velocity.x = -200;
+        pipe.body.velocity.y = FALLING_SPEED;
 
         pipe.checkWorldBounds = true;
         pipe.outOfBoundsKill = true;
     },
 
-    addRowOfPipes: function () {
-        var hole = Math.floor(Math.random() * 5) + 1;
+    addRowOfPipes() {
+        const hole = Math.floor(Math.random() * 5) + 1;
         for (var i = 0; i < 8; i++) {
             if (i != hole && i != hole + 1) {
-                this.addOnePipe(400, i * 60 + 10);
+                this.addOnePipe(i * 60 + 10 , 600);
             }
         }
         this.score += 1;
@@ -98,19 +143,23 @@ var mainstate = {
     },
 
     hitPipe: function () {
-        if (this.bird.alive == false) {
-            return;
-        }
+        this.restartGame();
+        //if (this.bird.alive == false) {
+        //    return;
+        //}
 
         this.bird.alive = false;
+        this.bird.body.velocity.x = 1000;
 
         game.time.events.remove(this.timer);
         this.pipes.forEachAlive(function(pipe) {
-            pipe.body.velocity.x = 0;
+            pipe.body.velocity.y = 0;
         }, this);
     },
 
     restartGame: function () {
+        clearInterval(this.rightInterval);
+        clearInterval(this.leftInterval);
         game.state.start('main');
     },
 };
