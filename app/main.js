@@ -94,7 +94,7 @@ var mainstate = {
 
         this.emitter.makeParticles(['arm2', 'head', 'body', 'bodypart1', 'bodypart2', 'bodypart3'], 1, 10, true, false);
         this.emitter.bounce.setTo(200, 1);
-        this.emitter.angularDrag = 360;
+        this.emitter.angularDrag = 30;
 
         this.gameOver = false;
         //game.input.onDown.add(this.particleBurst, this);
@@ -116,7 +116,7 @@ var mainstate = {
 
         this.emitter.minParticleSpeed.set(-400, -FALLING_SPEED);
         this.emitter.maxParticleSpeed.set(400, 500);
-        this.emitter.maxRotation = 360;
+        this.emitter.maxRotation = 5000;
 
 
 
