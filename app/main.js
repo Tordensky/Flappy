@@ -97,9 +97,10 @@ var mainstate = {
         if (!this.gameStarted) {
             this.startGame();
         }
+        clearInterval(this.leftInterval);
         this.leftInterval = setInterval(() => {
 
-            if (this.bird && this.bird.body.velocity.x > -MAX_SPEED) {
+            if (this.bird && this.bird.body && this.bird.body.velocity.x > -MAX_SPEED) {
                 this.bird.body.velocity.x -= TURN_SPEED;
                 this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
 
@@ -115,8 +116,9 @@ var mainstate = {
         if (!this.gameStarted) {
             this.startGame();
         }
+        clearInterval(this.rightInterval);
         this.rightInterval = setInterval(() => {
-            if (this.bird && this.bird.body.velocity.x < MAX_SPEED) {
+            if (this.bird && this.bird.body && this.bird.body.velocity.x < MAX_SPEED) {
                 this.bird.body.velocity.x += TURN_SPEED;
                 this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
             }
