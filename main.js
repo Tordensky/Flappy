@@ -17,7 +17,7 @@ var mainstate = {
         game.stage.backgroundColor = '#71c5cf';
 
         game.load.image('bird', 'assets/skydiverSmall.png');
-        game.load.image('pipe', 'assets/gate_gate.png');
+        game.load.image('pipe', 'assets/gate.png');
         game.load.image('backcloud', 'assets/backCloud.png');
         game.load.image('logo', 'assets/logo.png');
 
@@ -72,7 +72,7 @@ var mainstate = {
         rightArrow.onDown.add(this.moveRightDown, this);
         rightArrow.onUp.add(this.moveRightUp, this);
 
-        this.backgroundCloudsTimer = game.time.events.loop(1000, this.addCloud, this);
+        this.backgroundCloudsTimer = game.time.events.loop(300, this.addCloud, this);
         this.timer = game.time.events.loop(1500, this.addRowOfPipes, this);
 
         this.score = 0;
@@ -155,7 +155,7 @@ var mainstate = {
         let rand = Math.random();
         cloud.alpha = rand;
         cloud.scale.setTo(rand+0.2, rand+0.2);
-        cloud.body.velocity.y = -(Math.floor(rand * 150) + 200);
+        cloud.body.velocity.y = -(Math.floor(rand * 150) + 300);
 
         cloud.checkWorldBounds = true;
         cloud.outOfBoundsKill = true;
