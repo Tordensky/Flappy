@@ -1,9 +1,12 @@
-const MAX_SPEED = 350;
-const FALLING_SPEED = -850;
+const MAX_TURN_SPEED = 450;
+const FALLING_SPEED = 750;
 
-const TURN_SPEED = 25;
+const TURN_SPEED = 20;
 const TURN_UPDATE_INTERVA_MS = 10;
-const MAX_ANGLE = 30;
+const MAX_ANGLE = 45;
+
+var CLOUD_SPEED_MIN = 400;
+var CLOUD_SPEED_MAX = 600;
 
 // init phaser
 var game = new Phaser.Game(490, 650, Phaser.AUTO, 'gameDiv');
@@ -20,6 +23,13 @@ var mainstate = {
         game.load.image('pipe', 'assets/gate.png');
         game.load.image('backcloud', 'assets/backCloud.png');
         game.load.image('logo', 'assets/logo.png');
+        game.load.image('arm1', 'assets/arm.png');
+        game.load.image('arm2', 'assets/arm2.png');
+        game.load.image('head', 'assets/head.png');
+        game.load.image('body', 'assets/body.png');
+        game.load.image('bodypart1', 'assets/bodypart1.png');
+        game.load.image('bodypart2', 'assets/bodypart2.png');
+        game.load.image('bodypart3', 'assets/bodypart3.png');
 
         game.load.audio('jump', 'assets/jump.wav');
     },
@@ -44,7 +54,7 @@ var mainstate = {
 
         this.controlText = game.add.text(game.world.centerX, 300, '0', {font: '20px Arial', fill: "#ffffff", fontWeight: 'bold'});
         this.controlText.anchor.setTo(0.5, 0.5);
-        this.controlText.text = "PRESS ANY KEY TO START";
+        this.controlText.text = "PRESS ARROW KEYS TO START";
 
 
         this.pipes = game.add.group();
@@ -58,12 +68,6 @@ var mainstate = {
         this.bird.anchor.setTo(0.5, 0.0);
 
         // Setup controls
-        // const spacekey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        // spacekey.onDown.add(this.jump, this);
-
-        //const upArrow = this.game.input.keyboard.addKey(Phaser.Keyboard.UP);
-        //upArrow.onDown.add(this.jump, this);
-
         const leftArrow = this.game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         leftArrow.onDown.add(this.moveLeftDown, this);
         leftArrow.onUp.add(this.moveLeftUp, this);
@@ -85,24 +89,65 @@ var mainstate = {
         this.addCloud(false);
 
         this.gameStarted = false;
+
+        this.emitter = game.add.emitter(0, 0, 100);
+
+        this.emitter.makeParticles(['arm2', 'head', 'body', 'bodypart1', 'bodypart2', 'bodypart3'], 1, 10, true, false);
+        this.emitter.bounce.setTo(200, 1);
+        this.emitter.angularDrag = 360;
+
+        this.gameOver = false;
+        //game.input.onDown.add(this.particleBurst, this);
+    },
+
+    particleBurst() {
+        if (!this.bird.alive) {
+            return;
+        }
+        //  Position the this.emitter where the mouse/touch event was
+        this.emitter.x = this.bird.body.center.x;
+        this.emitter.y = this.bird.body.center.y;
+        this.emitter.gravity = FALLING_SPEED;
+        var px = this.bird.body.velocity.x;
+        var py = this.bird.body.velocity.y;
+
+        //px *= -1;
+        //py *= -1;
+
+        this.emitter.minParticleSpeed.set(-400, -FALLING_SPEED);
+        this.emitter.maxParticleSpeed.set(400, 500);
+        this.emitter.maxRotation = 360;
+
+
+
+        //  The first parameter sets the effect to "explode" which means all particles are emitted at once
+        //  The second gives each particle a 2000ms lifespan
+        //  The third is ignored when using burst/explode mode
+        //  The final parameter (10) is how many particles will be emitted in this single burst
+        this.emitter.start(true, 2000, null, 20);
+
     },
 
     startGame() {
         this.gameStarted = true;
-        this.logo.body.velocity.y = -(MAX_SPEED * 2);
+        this.logo.body.velocity.y = -(FALLING_SPEED);
         this.controlText.text = '';
     },
 
     moveLeftDown() {
+        if (this.gameOver) {
+            return;
+        }
+
         if (!this.gameStarted) {
             this.startGame();
         }
         clearInterval(this.leftInterval);
         this.leftInterval = setInterval(() => {
 
-            if (this.bird && this.bird.body && this.bird.body.velocity.x > -MAX_SPEED) {
+            if (this.bird && this.bird.body && this.bird.body.velocity.x > -MAX_TURN_SPEED) {
                 this.bird.body.velocity.x -= TURN_SPEED;
-                this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
+                this.bird.angle = this.bird.body.velocity.x / MAX_TURN_SPEED * MAX_ANGLE;
 
             }
         }, TURN_UPDATE_INTERVA_MS);
@@ -113,14 +158,18 @@ var mainstate = {
     },
 
     moveRightDown() {
+        if (this.gameOver) {
+            return;
+        }
+
         if (!this.gameStarted) {
             this.startGame();
         }
         clearInterval(this.rightInterval);
         this.rightInterval = setInterval(() => {
-            if (this.bird && this.bird.body && this.bird.body.velocity.x < MAX_SPEED) {
+            if (this.bird && this.bird.body && this.bird.body.velocity.x < MAX_TURN_SPEED) {
                 this.bird.body.velocity.x += TURN_SPEED;
-                this.bird.angle = this.bird.body.velocity.x / MAX_SPEED * MAX_ANGLE;
+                this.bird.angle = this.bird.body.velocity.x / MAX_TURN_SPEED * MAX_ANGLE;
             }
         }, TURN_UPDATE_INTERVA_MS);
     },
@@ -157,7 +206,8 @@ var mainstate = {
         let rand = Math.random();
         cloud.alpha = rand;
         cloud.scale.setTo(rand+0.2, rand+0.2);
-        cloud.body.velocity.y = -(Math.floor(rand * 150) + 300);
+
+        cloud.body.velocity.y = -(Math.floor(rand * (CLOUD_SPEED_MAX - CLOUD_SPEED_MIN)) + CLOUD_SPEED_MIN);
 
         cloud.checkWorldBounds = true;
         cloud.outOfBoundsKill = true;
@@ -169,7 +219,7 @@ var mainstate = {
         pipe.reset(x, y);
 
         pipe.body.checkCollision.up = false;
-        pipe.body.velocity.y = FALLING_SPEED;
+        pipe.body.velocity.y = -FALLING_SPEED;
 
         pipe.checkWorldBounds = true;
         pipe.outOfBoundsKill = true;
@@ -202,22 +252,27 @@ var mainstate = {
     },
 
     hitPipe: function () {
-        this.restartGame();
+        this.bird.alpha = 0;
+        this.particleBurst();
+        if (!this.gameOver) {
+            this.gameOver = true;
+            setTimeout(this.restartGame, 1000);
+        }
+        //this.restartGame();
         //if (this.bird.alive == false) {
         //    return;
         //}
 
         this.bird.alive = false;
-        this.bird.body.velocity.x = 1000;
 
         game.time.events.remove(this.backgroundCloudsTimer);
-        this.backgroundClouds.forEachAlive(function(cloud) {
-            cloud.body.velocity.y = 0;
-        }, this);
+        //this.backgroundClouds.forEachAlive(function(cloud) {
+        //    cloud.body.velocity.y = 0;
+        //}, this);
         game.time.events.remove(this.timer);
-        this.pipes.forEachAlive(function(pipe) {
-            pipe.body.velocity.y = 0;
-        }, this);
+        //this.pipes.forEachAlive(function(pipe) {
+        //    pipe.body.velocity.y = 0;
+        //}, this);
     },
 
     restartGame: function () {
