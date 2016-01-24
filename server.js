@@ -32,6 +32,6 @@ proxy.on('error', function(e) {
 //    res.send('Hello world!');
 //});
 
-app.listen(3000, function () {
+app.listen(port, function () {
     console.log('App listening og port 3000!');
 });
