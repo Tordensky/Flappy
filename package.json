@@ -4,12 +4,17 @@
   "description": "A simple space game",
   "main": "main.js",
   "scripts": {
-    "serve": "node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config webpack.config.js --inline"
+    "serve": "node_modules/webpack-dev-server/bin/webpack-dev-server.js --progress --colors --config webpack.config.js --inline",
+    "start": "node server",
+    "postinstall": "node deploy"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "babel-preset-es2015": "^6.3.13",
+    "express": "^4.13.4",
+    "http-proxy": "^1.12.0",
+    "path": "^0.12.7",
     "phaser": "^2.4.4"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
-
 const MAX_SPEED = 350;
-const FALLING_SPEED = -650;
+const FALLING_SPEED = -850;
+
 const TURN_SPEED = 25;
 const TURN_UPDATE_INTERVA_MS = 10;
 const MAX_ANGLE = 30;
@@ -131,7 +131,7 @@ var mainstate = {
         // This function is called 60 times per second
         // It contains the game's logic
 
-        if (this.bird.inWorld == false) {
+        if (this.bird.inWorld === false) {
             this.restartGame();
         }
 
@@ -188,7 +188,7 @@ var mainstate = {
     },
 
     jump: function () {
-        if (this.bird.alive == false) {
+        if (this.bird.alive === false) {
             return;
         }
 

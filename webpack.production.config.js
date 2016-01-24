@@ -5,28 +5,21 @@ var buildPath = path.resolve(__dirname, 'public', 'build');
 var mainPath = path.resolve(__dirname, 'app', 'main.js');
 
 var config = {
-    devtol: 'eval',
-    entry: [
-        'webpack/hot/dev-server',
-        'webpack-dev-server/client?http://localhost:8080',
-        mainPath
-    ],
+    devtool: 'source-map',
+    entry: mainPath,
     output: {
         path: buildPath,
-        filename: 'bundle.js',
-        publicPath: '/build/',
+        filename: 'bundle.js'
     },
     module: {
         loaders: [
             {
                 test: /\.js$/,
-                loader: 'babel-loader',
+                loader: 'babel',
                 exclude: [nodeModulesPath]
             }
         ]
-    },
-    plugins: [new Webpack.HotModuleReplacementPlugin()]
+    }
 };
 
 module.exports = config;
-
