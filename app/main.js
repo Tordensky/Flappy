@@ -1,9 +1,9 @@
-const MAX_TURN_SPEED = 450;
-const FALLING_SPEED = 700;
+const FALLING_SPEED = 680;
 
-const TURN_SPEED = 20;
+const MAX_TURN_SPEED = 500;
+const TURN_SPEED = 35;
+const MAX_ANGLE = 20;
 const TURN_UPDATE_INTERVA_MS = 10;
-const MAX_ANGLE = 45;
 
 var CLOUD_SPEED_MIN = 400;
 var CLOUD_SPEED_MAX = 600;
@@ -32,6 +32,7 @@ var mainstate = {
         game.load.image('bodypart3', 'assets/bodypart3.png');
 
         game.load.audio('jump', 'assets/jump.wav');
+        game.load.audio('splash', 'assets/splash.wav');
     },
 
     create() {
@@ -41,7 +42,7 @@ var mainstate = {
         // set the physics system
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        this.jumpSound = game.add.audio('jump');
+        this.splashSound = game.add.audio('splash');
 
         this.backgroundClouds = game.add.group();
         this.backgroundClouds.enableBody = true;
@@ -96,7 +97,31 @@ var mainstate = {
         this.emitter.angularDrag = 30;
 
         this.gameOver = false;
-        //game.input.onDown.add(this.particleBurst, this);
+
+
+        this.turnLeftSpeed = 0;
+        this.turnRightSpeed = 0;
+    },
+
+    update: function () {
+        // This function is called 60 times per second
+        // It contains the game's logic
+
+        if (this.jumper.inWorld === false && !this.gameOver) {
+            this.restartGame();
+        }
+
+        if (this.turnLeftSpeed < 0 && (this.jumper.body.velocity.x > -MAX_TURN_SPEED) ) {
+            this.jumper.body.velocity.x += this.turnLeftSpeed;
+        }
+
+        if (this.turnRightSpeed > 0 && (this.jumper.body.velocity.x < MAX_TURN_SPEED)) {
+            this.jumper.body.velocity.x += this.turnRightSpeed;
+        }
+
+
+        this.jumper.angle = this.jumper.body.velocity.x / MAX_TURN_SPEED * MAX_ANGLE;
+        game.physics.arcade.overlap(this.jumper, this.gates, this.hitPipe, null, this);
     },
 
     particleBurst() {
@@ -116,7 +141,7 @@ var mainstate = {
         //  The second gives each particle a 2000ms lifespan
         //  The third is ignored when using burst/explode mode
         //  The final parameter (10) is how many particles will be emitted in this single burst
-        this.emitter.start(true, 2000, null, 20);
+        this.emitter.start(true, 2000, null, 10);
     },
 
     startGame() {
@@ -133,19 +158,15 @@ var mainstate = {
         if (!this.gameStarted) {
             this.startGame();
         }
-        clearInterval(this.leftInterval);
-        this.leftInterval = setInterval(() => {
+        this.turnLeftSpeed = -TURN_SPEED;
+    },
 
-            if (this.jumper && this.jumper.body && this.jumper.body.velocity.x > -MAX_TURN_SPEED) {
-                this.jumper.body.velocity.x -= TURN_SPEED;
-                this.jumper.angle = this.jumper.body.velocity.x / MAX_TURN_SPEED * MAX_ANGLE;
-
-            }
-        }, TURN_UPDATE_INTERVA_MS);
+    turnReset() {
+        this.turnSpeed = 0;
     },
 
     moveLeftUp() {
-        clearInterval(this.leftInterval);
+        this.turnLeftSpeed = 0;
     },
 
     moveRightDown() {
@@ -156,29 +177,12 @@ var mainstate = {
         if (!this.gameStarted) {
             this.startGame();
         }
-        clearInterval(this.rightInterval);
-        this.rightInterval = setInterval(() => {
-            if (this.jumper && this.jumper.body && this.jumper.body.velocity.x < MAX_TURN_SPEED) {
-                this.jumper.body.velocity.x += TURN_SPEED;
-                this.jumper.angle = this.jumper.body.velocity.x / MAX_TURN_SPEED * MAX_ANGLE;
-            }
-        }, TURN_UPDATE_INTERVA_MS);
+
+        this.turnRightSpeed = TURN_SPEED;
     },
 
     moveRightUp() {
-        clearInterval(this.rightInterval);
-    },
-
-    update: function () {
-        // This function is called 60 times per second
-        // It contains the game's logic
-
-        if (this.jumper.inWorld === false) {
-            this.restartGame();
-        }
-
-        game.physics.arcade
-            .overlap(this.jumper, this.gates, this.hitPipe, null, this);
+        this.turnRightSpeed = 0;
     },
 
     addCloud(bottom=true) {
@@ -227,18 +231,6 @@ var mainstate = {
         this.labelScore.text = this.score;
     },
 
-    jump: function () {
-        if (this.jumper.alive === false) {
-            return;
-        }
-
-        this.jumpSound.play();
-        this.jumper.body.velocity.y = -350;
-        game.add.tween(this.jumper)
-            .to({angle: -20}, 100)
-            .start();
-    },
-
     hitPipe: function () {
         this.jumper.alpha = 0;
         this.particleBurst();
@@ -248,6 +240,7 @@ var mainstate = {
         }
 
         this.jumper.alive = false;
+        //this.splashSound.play();
 
         game.time.events.remove(this.backgroundCloudsTimer);
         game.time.events.remove(this.timer);
