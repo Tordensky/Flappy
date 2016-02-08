@@ -31,6 +31,11 @@ var mainstate = {
         game.load.image('bodypart2', 'assets/bodypart2.png');
         game.load.image('bodypart3', 'assets/bodypart3.png');
 
+        game.load.image('bam', 'assets/bam.png');
+        game.load.image('ouch', 'assets/ouch.png');
+        game.load.image('splash', 'assets/splath.png');
+        game.load.image('wow', 'assets/wow.png');
+
         game.load.audio('jump', 'assets/jump.wav');
         game.load.audio('splash', 'assets/splash.wav');
     },
@@ -90,8 +95,10 @@ var mainstate = {
 
         this.gameStarted = false;
 
-        this.emitter = game.add.emitter(0, 0, 100);
+        this.textEmitter = game.add.emitter(0, 0, 100);
+        this.textEmitter.makeParticles(['bam', 'ouch', 'splash'], 1, 1, true, false);
 
+        this.emitter = game.add.emitter(0, 0, 100);
         this.emitter.makeParticles(['arm2', 'head', 'body', 'bodypart1', 'bodypart2', 'bodypart3'], 1, 10, true, false);
         this.emitter.bounce.setTo(200, 1);
         this.emitter.angularDrag = 30;
@@ -137,10 +144,22 @@ var mainstate = {
         this.emitter.maxParticleSpeed.set(400, 500);
         this.emitter.maxRotation = 5000;
 
+        this.textEmitter.x = this.jumper.body.center.x;
+        this.textEmitter.y = this.jumper.body.center.y;
+        this.textEmitter.gravity = FALLING_SPEED/2;
+
+        this.textEmitter.minParticleSpeed.set(-100, -100);
+        this.textEmitter.maxParticleSpeed.set(100, 20);
+        this.textEmitter.maxRotation = 70;
+        this.textEmitter.minRotation = -70;
+
+
         //  The first parameter sets the effect to "explode" which means all particles are emitted at once
         //  The second gives each particle a 2000ms lifespan
         //  The third is ignored when using burst/explode mode
         //  The final parameter (10) is how many particles will be emitted in this single burst
+
+        this.textEmitter.start(true, 4000, null, 2);
         this.emitter.start(true, 2000, null, 10);
     },
 
