@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 const App = () => {
   return (
-    <div>With live reload</div>
+    <div>Hello world</div>
   );
 }
 
